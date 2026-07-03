@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Production: https://ai-29bz.onrender.com  |  Dev: http://localhost:5000
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://ai-29bz.onrender.com';
 console.log('📡 [API] Base URL:', BASE_URL);
 
 const api = axios.create({
