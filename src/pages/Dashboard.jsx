@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { getDashboard, getMapData } from '../services/api';
 import { 
   Heart, Wind, Car, Users, Bell, 
-  ArrowUpRight, ArrowDownRight, Activity, AlertTriangle, ShieldAlert, Sparkles, Brain
+  ArrowUpRight, ArrowDownRight, Activity, AlertTriangle, ShieldAlert, Sparkles, Brain,
+  CheckCircle2, Database, Wifi, CloudRain, TrendingUp
 } from 'lucide-react';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
@@ -165,6 +166,57 @@ export default function Dashboard() {
                 </div>
               );
             })}
+          </div>
+
+          {/* AI Insights bar + Data Sources */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Today's AI Insights */}
+            <div className="lg:col-span-2 bg-gradient-to-r from-primary-600/10 to-accent-600/10 border border-primary-500/15 rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles size={14} className="text-primary-400" />
+                <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Today's AI Insights</span>
+                <span className="ml-auto flex items-center gap-1 text-[9px] text-emerald-400 font-semibold">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                  Live
+                </span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { label: 'Traffic', value: '↑ 12%', color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20' },
+                  { label: 'Flood Risk', value: 'Medium', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
+                  { label: 'Air Quality', value: 'Poor', color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20' },
+                  { label: 'Energy', value: '↓ 4%', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+                ].map((item, i) => (
+                  <div key={i} className={`border rounded-xl px-3 py-2.5 ${item.bg}`}>
+                    <p className="text-[10px] text-slate-500 font-medium mb-0.5">{item.label}</p>
+                    <p className={`text-sm font-bold ${item.color}`}>{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Data Sources Card */}
+            <div className="bg-surface-900 border border-white/5 rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Database size={14} className="text-primary-400" />
+                <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Data Sources</span>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { label: 'Citizen Reports', icon: Users, color: 'text-primary-400' },
+                  { label: 'Open-Meteo Weather API', icon: CloudRain, color: 'text-sky-400' },
+                  { label: 'Air Quality Sensors', icon: Wind, color: 'text-emerald-400' },
+                  { label: 'Traffic Data (ITMS)', icon: Car, color: 'text-amber-400' },
+                  { label: 'Firebase (Live Alerts)', icon: Wifi, color: 'text-rose-400' },
+                  { label: 'Gemini AI Analysis', icon: Brain, color: 'text-purple-400' },
+                ].map((src, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <CheckCircle2 size={12} className={src.color} />
+                    <span className="text-slate-300">{src.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Main Charts & Alerts */}
