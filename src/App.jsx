@@ -61,8 +61,8 @@ function AppRoutes() {
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
-      {/* Protected – with sidebar layout */}
-      <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+      {/* Demo (Public with Layout) */}
+      <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/ai-agent" element={<AIAgent />} />
         <Route path="/ai-assistant" element={<AIAssistant />} />
@@ -70,8 +70,10 @@ function AppRoutes() {
         <Route path="/predictions" element={<PredictiveAnalytics />} />
         <Route path="/recommendations" element={<Recommendations />} />
         <Route path="/alerts" element={<Alerts />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/profile" element={<Profile />} />
+        
+        {/* Protected within Layout */}
+        <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
       </Route>
 

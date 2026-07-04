@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Trash2, Loader2, Brain } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Trash2, Loader2, Brain, AlertTriangle } from 'lucide-react';
 import { sendChatMessage } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -135,7 +135,68 @@ export default function AIAssistant() {
                 ? 'bg-primary-600/25 border-primary-500/35 text-slate-100 rounded-tr-none'
                 : 'bg-surface-900/80 border-white/5 text-slate-200 rounded-tl-none'
             }`}>
-              <p className="whitespace-pre-wrap">{msg.content}</p>
+              {(() => {
+                let text = msg.content;
+                let decisionData = null;
+                
+                if (msg.role === 'assistant') {
+                  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+                  if (jsonMatch) {
+                    try {
+                      const data = JSON.parse(jsonMatch[1]);
+                      if (data.issueDetected) {
+                        decisionData = data;
+                        text = text.replace(jsonMatch[0], '').trim();
+                      }
+                    } catch (e) {
+                      // ignore parse errors
+                    }
+                  }
+                }
+
+                return (
+                  <>
+                    <p className="whitespace-pre-wrap">{text}</p>
+                    
+                    {decisionData && (
+                      <div className="mt-4 bg-surface-950 border border-white/10 rounded-xl p-4 space-y-3 shadow-lg">
+                        <div className="flex items-center gap-2 mb-2 border-b border-white/5 pb-2">
+                          <AlertTriangle size={16} className={decisionData.riskLevel?.toLowerCase() === 'critical' ? 'text-rose-400' : 'text-amber-400'} />
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Decision Intelligence Analysis</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <span className="text-slate-500 block mb-1">Risk Level</span>
+                            <span className={`px-2 py-0.5 rounded-md font-semibold bg-white/5 border border-white/10 ${decisionData.riskLevel?.toLowerCase() === 'critical' ? 'text-rose-400' : 'text-amber-400'}`}>
+                              {decisionData.riskLevel}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block mb-1">Priority</span>
+                            <span className="px-2 py-0.5 rounded-md font-semibold bg-white/5 border border-white/10 text-rose-300">
+                              {decisionData.priority}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block mb-1">Department</span>
+                            <span className="text-slate-200 font-medium">{decisionData.responsibleDepartment}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 block mb-1">Confidence</span>
+                            <span className="text-emerald-400 font-bold">{decisionData.confidenceScore}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="pt-2 border-t border-white/5 mt-2">
+                          <span className="text-slate-500 block mb-1 text-xs">Recommendation</span>
+                          <p className="text-slate-200 text-[13px]">{decisionData.recommendation}</p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         ))}

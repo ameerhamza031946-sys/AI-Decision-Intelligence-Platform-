@@ -1,28 +1,35 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { getFirestore, collection, getDocs, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
 
-// Hardcoded Firebase configuration (replace with your own if needed)
+// The user must provide these in the .env file
 const firebaseConfig = {
-  apiKey: "AIzaSyDEte16f8P90Q6OLiiOiVdn4ZL4Vs4cqbY",
-  authDomain: "ai-decision-intelligence-b5718.firebaseapp.com",
-  projectId: "ai-decision-intelligence-b5718",
-  storageBucket: "ai-decision-intelligence-b5718.firebasestorage.app",
-  messagingSenderId: "838884845703",
-  appId: "1:838884845703:web:b86b159325f5a49689f022",
-  measurementId: "G-GWEEHKRXJ8",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Initialize Firebase app
-const app = initializeApp(firebaseConfig);
+// Initialize only if config exists to prevent crashing if user hasn't set it up yet
+let app;
+let db = null;
+let auth = null;
+let googleProvider = null;
 
-// Initialize services
-export const analytics = getAnalytics(app);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const googleProvider = new GoogleAuthProvider();
+try {
+  if (firebaseConfig.apiKey) {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+    console.log("Firebase Initialized Successfully.");
+  } else {
+    console.warn("Firebase config missing. Running in mock data mode.");
+  }
+} catch (error) {
+  console.error("Firebase initialization error:", error);
+}
 
-googleProvider.setCustomParameters({ prompt: "select_account" });
-
-export default app;
+export { db, auth, googleProvider, collection, getDocs, addDoc, onSnapshot, query, orderBy };

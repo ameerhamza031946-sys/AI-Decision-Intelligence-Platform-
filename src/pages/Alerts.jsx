@@ -6,6 +6,7 @@ import {
   MapPin, Flame, Plus, ShieldAlert, CheckCircle2 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { db, collection, addDoc, onSnapshot, query, orderBy } from '../services/firebase';
 
 export default function Alerts() {
   const { role } = useAuth();
@@ -25,22 +26,49 @@ export default function Alerts() {
   const isAuthority = role === 'admin' || role === 'government';
 
   useEffect(() => {
+    let unsubscribe = null;
+
     async function fetchData() {
       try {
-        const response = await getAlerts();
-        setAlerts(response.alerts || []);
-        setSummary(response.summary || { critical: 0, high: 0, medium: 0, active: 0 });
+        setLoading(true);
+        if (db) {
+          // Listen to live Firebase alerts
+          const q = query(collection(db, "alerts"), orderBy("timestamp", "desc"));
+          unsubscribe = onSnapshot(q, (snapshot) => {
+            const firebaseAlerts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Calculate summary
+            const currentSummary = { critical: 0, high: 0, medium: 0, active: 0, total: firebaseAlerts.length };
+            firebaseAlerts.forEach(a => {
+              if (a.status === 'active') currentSummary.active++;
+              if (currentSummary[a.severity] !== undefined) currentSummary[a.severity]++;
+            });
+            
+            setAlerts(firebaseAlerts);
+            setSummary(currentSummary);
+            setLoading(false);
+          });
+        } else {
+          // Fallback to mock data if Firebase not configured
+          const response = await getAlerts();
+          setAlerts(response.alerts || []);
+          setSummary(response.summary || { critical: 0, high: 0, medium: 0, active: 0 });
+          setLoading(false);
+        }
       } catch (err) {
         console.error(err);
         toast.error('Failed to load active system alerts.');
-      } finally {
         setLoading(false);
       }
     }
     fetchData();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
-  const handleCreateAlert = (e) => {
+  const handleCreateAlert = async (e) => {
     e.preventDefault();
     if (!title || !description || !affectedPopulation) {
       toast.error('Please fill in all alert fields');
@@ -48,7 +76,6 @@ export default function Alerts() {
     }
 
     const newAlert = {
-      id: alerts.length + 1,
       severity,
       title,
       description,
@@ -59,19 +86,29 @@ export default function Alerts() {
       affectedPopulation: parseInt(affectedPopulation) || 0,
     };
 
-    setAlerts([newAlert, ...alerts]);
-    setSummary((prev) => ({
-      ...prev,
-      total: (prev.total || 0) + 1,
-      active: (prev.active || 0) + 1,
-      [severity]: (prev[severity] || 0) + 1,
-    }));
+    try {
+      if (db) {
+        await addDoc(collection(db, "alerts"), newAlert);
+      } else {
+        newAlert.id = alerts.length + 1;
+        setAlerts([newAlert, ...alerts]);
+        setSummary((prev) => ({
+          ...prev,
+          total: (prev.total || 0) + 1,
+          active: (prev.active || 0) + 1,
+          [severity]: (prev[severity] || 0) + 1,
+        }));
+      }
 
-    setTitle('');
-    setDescription('');
-    setAffectedPopulation('');
-    setShowForm(false);
-    toast.success('⚠️ Emergency alert dispatched to the community!');
+      setTitle('');
+      setDescription('');
+      setAffectedPopulation('');
+      setShowForm(false);
+      toast.success('⚠️ Emergency alert dispatched to the community!');
+    } catch (error) {
+      console.error("Error adding alert:", error);
+      toast.error('Failed to dispatch alert');
+    }
   };
 
   const getSeverityStyle = (sev) => {
